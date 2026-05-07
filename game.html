@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAF1 Drift Game</title>
+
+<style>
+
+body{
+margin:0;
+overflow:hidden;
+background:black;
+font-family:Arial;
+}
+
+canvas{
+display:block;
+}
+
+#ui{
+position:absolute;
+top:20px;
+left:20px;
+color:white;
+z-index:10;
+}
+
+#speed{
+font-size:28px;
+font-weight:bold;
+color:#00ffcc;
+}
+
+#coins{
+margin-top:10px;
+font-size:20px;
+}
+
+#playBtn{
+position:absolute;
+bottom:30px;
+left:50%;
+transform:translateX(-50%);
+padding:18px 50px;
+font-size:24px;
+border:none;
+border-radius:14px;
+background:#00ffcc;
+color:black;
+font-weight:bold;
+cursor:pointer;
+z-index:10;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="ui">
+<div id="speed">0 KM/H</div>
+<div id="coins">DAF1 Coins: 250</div>
+</div>
+
+<button id="playBtn">
+START ENGINE
+</button>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+
+<script>
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x050816);
+
+const camera = new THREE.PerspectiveCamera(
+75,
+window.innerWidth/window.innerHeight,
+0.1,
+1000
+);
+
+const renderer = new THREE.WebGLRenderer({
+antialias:true
+});
+
+renderer.setSize(window.innerWidth,window.innerHeight);
+
+document.body.appendChild(renderer.domElement);
+
+const light = new THREE.PointLight(0xffffff,2);
+
+light.position.set(10,20,10);
+
+scene.add(light);
+
+const ambient = new THREE.AmbientLight(0x404040,4);
+
+scene.add(ambient);
+
+const roadGeometry = new THREE.PlaneGeometry(20,200);
+
+const roadMaterial = new THREE.MeshStandardMaterial({
+color:0x111111
+});
+
+const road = new THREE.Mesh(
+roadGeometry,
+roadMaterial
+);
+
+road.rotation.x = -Math.PI/2;
+
+scene.add(road);
+
+const carGeometry = new THREE.BoxGeometry(2,1,4);
+
+const carMaterial = new THREE.MeshStandardMaterial({
+color:0x00ffcc
+});
+
+const car = new THREE.Mesh(
+carGeometry,
+carMaterial
+);
+
+car.position.y = 0.5;
+
+scene.add(car);
+
+camera.position.set(0,5,10);
+
+let speed = 0;
+
+let coins = 250;
+
+document.getElementById("playBtn").onclick = () => {
+
+speed = 10;
+
+};
+
+function animate(){
+
+requestAnimationFrame(animate);
+
+road.position.z += speed * 0.05;
+
+if(road.position.z > 100){
+
+road.position.z = 0;
+
+}
+
+document.getElementById("speed").innerText =
+Math.floor(speed * 12) + " KM/H";
+
+speed *= 0.995;
+
+renderer.render(scene,camera);
+
+}
+
+animate();
+
+window.addEventListener("resize",()=>{
+
+camera.aspect = window.innerWidth/window.innerHeight;
+
+camera.updateProjectionMatrix();
+
+renderer.setSize(window.innerWidth,window.innerHeight);
+
+});
+
+</script>
+
+</body>
+</html>
