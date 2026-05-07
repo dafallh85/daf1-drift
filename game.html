@@ -10,7 +10,7 @@
 body{
 margin:0;
 overflow:hidden;
-background:#000;
+background:black;
 font-family:Arial;
 }
 
@@ -22,24 +22,25 @@ display:block;
 position:absolute;
 top:20px;
 left:20px;
-color:white;
 z-index:100;
+color:white;
 }
 
 #speed{
-font-size:30px;
+font-size:32px;
 font-weight:bold;
 color:#00ffcc;
+text-shadow:0 0 10px #00ffcc;
 }
 
 #coins{
-font-size:20px;
+font-size:22px;
 margin-top:10px;
 }
 
 .controls{
 position:absolute;
-bottom:30px;
+bottom:25px;
 width:100%;
 display:flex;
 justify-content:center;
@@ -48,14 +49,15 @@ z-index:100;
 }
 
 .btn{
-width:80px;
-height:80px;
-border-radius:50%;
+width:85px;
+height:85px;
 border:none;
-font-size:30px;
+border-radius:50%;
 background:#00ffcc;
 color:black;
+font-size:30px;
 font-weight:bold;
+box-shadow:0 0 20px #00ffcc;
 }
 
 </style>
@@ -80,7 +82,7 @@ font-weight:bold;
 
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x050816);
+scene.fog = new THREE.Fog(0x050816,20,120);
 
 const camera = new THREE.PerspectiveCamera(
 75,
@@ -97,43 +99,43 @@ renderer.setSize(window.innerWidth,window.innerHeight);
 
 document.body.appendChild(renderer.domElement);
 
-const ambient = new THREE.AmbientLight(0xffffff,1.2);
+renderer.setClearColor(0x050816);
+
+const ambient = new THREE.AmbientLight(0xffffff,1);
 
 scene.add(ambient);
 
-const light = new THREE.DirectionalLight(0xffffff,2);
+const neonLight = new THREE.PointLight(0x00ffcc,3,100);
 
-light.position.set(10,20,0);
+neonLight.position.set(0,20,10);
 
-scene.add(light);
+scene.add(neonLight);
 
-const roadGeometry = new THREE.PlaneGeometry(40,500);
-
-const roadMaterial = new THREE.MeshStandardMaterial({
-color:0x111111
+const roadTexture = new THREE.MeshStandardMaterial({
+color:0x111111,
+roughness:0.8,
+metalness:0.2
 });
 
 const road = new THREE.Mesh(
-roadGeometry,
-roadMaterial
+new THREE.PlaneGeometry(30,600),
+roadTexture
 );
 
 road.rotation.x = -Math.PI/2;
 
 scene.add(road);
 
-const lineMaterial = new THREE.MeshBasicMaterial({
-color:0xffffff
-});
-
-for(let i=0;i<40;i++){
+for(let i=0;i<80;i++){
 
 const line = new THREE.Mesh(
-new THREE.BoxGeometry(1,0.1,6),
-lineMaterial
+new THREE.BoxGeometry(0.5,0.1,4),
+new THREE.MeshBasicMaterial({
+color:0xffffff
+})
 );
 
-line.position.z = -i*12;
+line.position.z = -i*8;
 
 line.position.y = 0.05;
 
@@ -141,58 +143,115 @@ scene.add(line);
 
 }
 
-const cityMaterial = new THREE.MeshStandardMaterial({
-color:0x222244
-});
+function createBuilding(x,z){
 
-for(let i=0;i<60;i++){
+const h = Math.random()*25+10;
 
-const b = new THREE.Mesh(
+const building = new THREE.Mesh(
+
 new THREE.BoxGeometry(
-Math.random()*6+2,
-Math.random()*20+10,
-Math.random()*6+2
+Math.random()*5+4,
+h,
+Math.random()*5+4
 ),
-cityMaterial
+
+new THREE.MeshStandardMaterial({
+color:0x1a1aff,
+emissive:0x111133
+})
+
 );
 
-b.position.x = Math.random()>0.5 ?
-Math.random()*20+12 :
--Math.random()*20-12;
+building.position.set(x,h/2,z);
 
-b.position.z = -Math.random()*500;
-
-b.position.y = 5;
-
-scene.add(b);
+scene.add(building);
 
 }
 
-const car = new THREE.Mesh(
-new THREE.BoxGeometry(2,1,4),
-new THREE.MeshStandardMaterial({
-color:0x00ffcc
-})
+for(let i=0;i<120;i++){
+
+const side = Math.random()>0.5 ? 1 : -1;
+
+createBuilding(
+side*(Math.random()*20+12),
+-Math.random()*600
 );
 
-car.position.y = 0.5;
+}
 
-scene.add(car);
+const carGroup = new THREE.Group();
+
+const body = new THREE.Mesh(
+
+new THREE.BoxGeometry(2.2,0.8,4.5),
+
+new THREE.MeshStandardMaterial({
+color:0x00ffcc,
+metalness:0.8,
+roughness:0.2
+})
+
+);
+
+body.position.y = 0.6;
+
+carGroup.add(body);
+
+const cabin = new THREE.Mesh(
+
+new THREE.BoxGeometry(1.5,0.7,2),
+
+new THREE.MeshStandardMaterial({
+color:0x111111
+})
+
+);
+
+cabin.position.set(0,1,-0.2);
+
+carGroup.add(cabin);
+
+function wheel(x,z){
+
+const w = new THREE.Mesh(
+
+new THREE.CylinderGeometry(0.4,0.4,0.5,32),
+
+new THREE.MeshStandardMaterial({
+color:0x000000
+})
+
+);
+
+w.rotation.z = Math.PI/2;
+
+w.position.set(x,0.3,z);
+
+carGroup.add(w);
+
+}
+
+wheel(-1,-1.5);
+wheel(1,-1.5);
+wheel(-1,1.5);
+wheel(1,1.5);
+
+scene.add(carGroup);
 
 camera.position.set(0,5,10);
 
 let speed = 0;
 
 document.getElementById("gas").ontouchstart = ()=>{
-speed = 1;
+speed = 1.5;
 };
 
 document.getElementById("left").ontouchstart = ()=>{
-car.position.x -= 1;
+carGroup.position.x -= 1;
 };
 
 document.getElementById("right").ontouchstart = ()=>{
-car.position.x += 1;
+carGroup.position.x += 1;
 };
 
 function animate(){
@@ -202,14 +261,14 @@ requestAnimationFrame(animate);
 scene.children.forEach(obj=>{
 
 if(obj.geometry &&
-obj.geometry.type==="BoxGeometry" &&
-obj !== car){
+obj !== body &&
+obj.type==="Mesh"){
 
 obj.position.z += speed;
 
 if(obj.position.z > 20){
 
-obj.position.z = -500;
+obj.position.z = -600;
 
 }
 
@@ -218,7 +277,9 @@ obj.position.z = -500;
 });
 
 document.getElementById("speed").innerText =
-Math.floor(speed*120)+" KM/H";
+Math.floor(speed*140)+" KM/H";
+
+speed *= 0.992;
 
 renderer.render(scene,camera);
 
