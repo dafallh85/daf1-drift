@@ -3,98 +3,194 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DAF1 Drift</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<title>DAF1 DRIFT</title>
 
 <style>
 
-body{
+*{
 margin:0;
-font-family:'Orbitron',sans-serif;
-background:#050816;
-color:white;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
 overflow:hidden;
+background:#000;
 }
 
-video{
-position:fixed;
-right:0;
-bottom:0;
-min-width:100%;
-min-height:100%;
-object-fit:cover;
-z-index:-2;
-filter:brightness(0.4);
+#game{
+position:relative;
+width:100vw;
+height:100vh;
+overflow:hidden;
+background:
+linear-gradient(#111,#000);
 }
 
-.overlay{
+/* SKY */
+
+.sky{
 position:absolute;
 width:100%;
-height:100%;
-background:linear-gradient(to bottom,rgba(0,0,0,0.2),rgba(0,0,0,0.9));
-z-index:-1;
+height:40%;
+background:
+linear-gradient(#001133,#000);
 }
 
-.container{
+/* ROAD */
+
+.road{
+position:absolute;
+bottom:0;
+left:50%;
+transform:translateX(-50%);
+width:500px;
+height:100%;
+background:#2d2d2d;
+overflow:hidden;
+border-left:8px solid #fff;
+border-right:8px solid #fff;
+}
+
+.road::before{
+content:'';
+position:absolute;
+left:50%;
+transform:translateX(-50%);
+width:12px;
+height:200%;
+background:
+repeating-linear-gradient(
+to bottom,
+white 0px,
+white 40px,
+transparent 40px,
+transparent 80px
+);
+animation:roadMove 0.4s linear infinite;
+}
+
+@keyframes roadMove{
+from{
+top:-100%;
+}
+to{
+top:0%;
+}
+}
+
+/* PLAYER */
+
+.car{
+position:absolute;
+bottom:40px;
+left:210px;
+width:90px;
+height:150px;
+background:
+linear-gradient(red,#770000);
+border-radius:15px;
+box-shadow:0 0 20px red;
+}
+
+.car::before{
+content:'';
+position:absolute;
+top:10px;
+left:15px;
+width:60px;
+height:35px;
+background:#00ccff;
+border-radius:8px;
+}
+
+.car::after{
+content:'';
+position:absolute;
+bottom:10px;
+left:15px;
+width:60px;
+height:20px;
+background:#111;
+border-radius:5px;
+}
+
+/* ENEMY */
+
+.enemy{
+position:absolute;
+top:-200px;
+width:90px;
+height:150px;
+background:
+linear-gradient(#00ff99,#006644);
+border-radius:15px;
+box-shadow:0 0 20px #00ff99;
+}
+
+/* UI */
+
+.logo{
+position:absolute;
+top:20px;
+left:20px;
+font-size:40px;
+font-weight:bold;
+color:#00ff99;
+text-shadow:0 0 20px #00ff99;
+z-index:999;
+}
+
+.score{
+position:absolute;
+top:80px;
+left:20px;
+font-size:28px;
+color:#FFD700;
+font-weight:bold;
+z-index:999;
+}
+
+.dev{
+position:absolute;
+top:20px;
+right:20px;
+background:red;
+padding:12px 20px;
+border-radius:10px;
+font-weight:bold;
+color:white;
+z-index:999;
+box-shadow:0 0 20px red;
+}
+
+.gameover{
 position:absolute;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
-text-align:center;
-width:90%;
+font-size:70px;
+color:red;
+font-weight:bold;
+display:none;
+z-index:999;
+text-shadow:0 0 30px red;
 }
 
-.logo{
-font-size:60px;
-font-weight:700;
-color:#00d0ff;
-text-shadow:0 0 20px #00d0ff;
-}
-
-.subtitle{
-margin-top:10px;
-font-size:18px;
-color:#ccc;
-}
-
-.play-btn{
-margin-top:40px;
-padding:18px 50px;
-font-size:22px;
+.start{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+padding:20px 40px;
+font-size:30px;
+background:#00ff99;
 border:none;
 border-radius:12px;
-background:#00d0ff;
-color:black;
+cursor:pointer;
 font-weight:bold;
-cursor:pointer;
-transition:0.3s;
-box-shadow:0 0 20px #00d0ff;
-}
-
-.play-btn:hover{
-transform:scale(1.05);
-background:white;
-}
-
-.wallet{
-margin-top:20px;
-padding:14px 30px;
-font-size:18px;
-border:1px solid #00d0ff;
-border-radius:10px;
-background:transparent;
-color:white;
-cursor:pointer;
-}
-
-.footer{
-position:absolute;
-bottom:20px;
-width:100%;
-text-align:center;
-font-size:14px;
-color:#aaa;
+z-index:999;
 }
 
 </style>
@@ -102,35 +198,141 @@ color:#aaa;
 
 <body>
 
-<video autoplay muted loop>
-<source src="https://cdn.coverr.co/videos/coverr-night-drive-in-the-city-1561577601708?download=1080p" type="video/mp4">
-</video>
+<div id="game">
 
-<div class="overlay"></div>
+<div class="sky"></div>
 
-<div class="container">
+<div class="road"></div>
 
 <div class="logo">DAF1 DRIFT</div>
 
-<div class="subtitle">
-Gulf Cyberpunk Open World Racing
+<div class="score">
+SCORE: <span id="score">0</span>
 </div>
 
-<button class="play-btn" onclick="window.location.href='game.html'">
-PLAY NOW
+<div class="dev">
+⚠ UNDER DEVELOPMENT
+</div>
+
+<div class="gameover" id="gameover">
+GAME OVER
+</div>
+
+<button class="start" id="startBtn">
+START GAME
 </button>
 
-<br>
-
-<button class="wallet">
-CONNECT WALLET
-</button>
+<div class="car" id="player"></div>
 
 </div>
 
-<div class="footer">
-Powered by DAF1 Ecosystem
-</div>
+<script>
+
+const player = document.getElementById('player');
+const game = document.getElementById('game');
+const scoreEl = document.getElementById('score');
+const gameover = document.getElementById('gameover');
+const startBtn = document.getElementById('startBtn');
+
+let playerX = 210;
+let score = 0;
+let gameRunning = false;
+let speed = 7;
+
+document.addEventListener('keydown', (e)=>{
+
+if(!gameRunning) return;
+
+if(e.key === 'ArrowLeft' && playerX > 70){
+playerX -= 30;
+}
+
+if(e.key === 'ArrowRight' && playerX < 340){
+playerX += 30;
+}
+
+player.style.left = playerX + 'px';
+
+});
+
+startBtn.addEventListener('click', ()=>{
+
+startBtn.style.display='none';
+gameRunning = true;
+
+spawnEnemy();
+
+});
+
+function spawnEnemy(){
+
+if(!gameRunning) return;
+
+const enemy = document.createElement('div');
+
+enemy.classList.add('enemy');
+
+let lane = [90,210,330];
+
+let randomLane =
+lane[Math.floor(Math.random()*lane.length)];
+
+enemy.style.left = randomLane + 'px';
+
+game.appendChild(enemy);
+
+let enemyY = -180;
+
+const move = setInterval(()=>{
+
+if(!gameRunning){
+
+clearInterval(move);
+
+return;
+
+}
+
+enemyY += speed;
+
+enemy.style.top = enemyY + 'px';
+
+let playerRect = player.getBoundingClientRect();
+
+let enemyRect = enemy.getBoundingClientRect();
+
+if(
+
+playerRect.left < enemyRect.right &&
+playerRect.right > enemyRect.left &&
+playerRect.top < enemyRect.bottom &&
+playerRect.bottom > enemyRect.top
+
+){
+
+gameRunning = false;
+
+gameover.style.display='block';
+
+}
+
+if(enemyY > window.innerHeight){
+
+enemy.remove();
+
+score++;
+
+scoreEl.innerText = score;
+
+}
+
+},20);
+
+setTimeout(spawnEnemy,1200);
+
+}
+
+</script>
 
 </body>
 </html>
