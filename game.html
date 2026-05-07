@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DAF1 Drift Game</title>
+<title>DAF1 Drift</title>
 
 <style>
 
 body{
 margin:0;
 overflow:hidden;
-background:black;
+background:#000;
 font-family:Arial;
 }
 
@@ -23,34 +23,39 @@ position:absolute;
 top:20px;
 left:20px;
 color:white;
-z-index:10;
+z-index:100;
 }
 
 #speed{
-font-size:28px;
+font-size:30px;
 font-weight:bold;
 color:#00ffcc;
 }
 
 #coins{
-margin-top:10px;
 font-size:20px;
+margin-top:10px;
 }
 
-#playBtn{
+.controls{
 position:absolute;
 bottom:30px;
-left:50%;
-transform:translateX(-50%);
-padding:18px 50px;
-font-size:24px;
+width:100%;
+display:flex;
+justify-content:center;
+gap:20px;
+z-index:100;
+}
+
+.btn{
+width:80px;
+height:80px;
+border-radius:50%;
 border:none;
-border-radius:14px;
+font-size:30px;
 background:#00ffcc;
 color:black;
 font-weight:bold;
-cursor:pointer;
-z-index:10;
 }
 
 </style>
@@ -60,12 +65,14 @@ z-index:10;
 
 <div id="ui">
 <div id="speed">0 KM/H</div>
-<div id="coins">DAF1 Coins: 250</div>
+<div id="coins">DAF1 Coins: 500</div>
 </div>
 
-<button id="playBtn">
-START ENGINE
-</button>
+<div class="controls">
+<button class="btn" id="left">◀</button>
+<button class="btn" id="gas">▲</button>
+<button class="btn" id="right">▶</button>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 
@@ -90,17 +97,17 @@ renderer.setSize(window.innerWidth,window.innerHeight);
 
 document.body.appendChild(renderer.domElement);
 
-const light = new THREE.PointLight(0xffffff,2);
-
-light.position.set(10,20,10);
-
-scene.add(light);
-
-const ambient = new THREE.AmbientLight(0x404040,4);
+const ambient = new THREE.AmbientLight(0xffffff,1.2);
 
 scene.add(ambient);
 
-const roadGeometry = new THREE.PlaneGeometry(20,200);
+const light = new THREE.DirectionalLight(0xffffff,2);
+
+light.position.set(10,20,0);
+
+scene.add(light);
+
+const roadGeometry = new THREE.PlaneGeometry(40,500);
 
 const roadMaterial = new THREE.MeshStandardMaterial({
 color:0x111111
@@ -115,15 +122,57 @@ road.rotation.x = -Math.PI/2;
 
 scene.add(road);
 
-const carGeometry = new THREE.BoxGeometry(2,1,4);
-
-const carMaterial = new THREE.MeshStandardMaterial({
-color:0x00ffcc
+const lineMaterial = new THREE.MeshBasicMaterial({
+color:0xffffff
 });
 
+for(let i=0;i<40;i++){
+
+const line = new THREE.Mesh(
+new THREE.BoxGeometry(1,0.1,6),
+lineMaterial
+);
+
+line.position.z = -i*12;
+
+line.position.y = 0.05;
+
+scene.add(line);
+
+}
+
+const cityMaterial = new THREE.MeshStandardMaterial({
+color:0x222244
+});
+
+for(let i=0;i<60;i++){
+
+const b = new THREE.Mesh(
+new THREE.BoxGeometry(
+Math.random()*6+2,
+Math.random()*20+10,
+Math.random()*6+2
+),
+cityMaterial
+);
+
+b.position.x = Math.random()>0.5 ?
+Math.random()*20+12 :
+-Math.random()*20-12;
+
+b.position.z = -Math.random()*500;
+
+b.position.y = 5;
+
+scene.add(b);
+
+}
+
 const car = new THREE.Mesh(
-carGeometry,
-carMaterial
+new THREE.BoxGeometry(2,1,4),
+new THREE.MeshStandardMaterial({
+color:0x00ffcc
+})
 );
 
 car.position.y = 0.5;
@@ -134,30 +183,42 @@ camera.position.set(0,5,10);
 
 let speed = 0;
 
-let coins = 250;
+document.getElementById("gas").ontouchstart = ()=>{
+speed = 1;
+};
 
-document.getElementById("playBtn").onclick = () => {
+document.getElementById("left").ontouchstart = ()=>{
+car.position.x -= 1;
+};
 
-speed = 10;
-
+document.getElementById("right").ontouchstart = ()=>{
+car.position.x += 1;
 };
 
 function animate(){
 
 requestAnimationFrame(animate);
 
-road.position.z += speed * 0.05;
+scene.children.forEach(obj=>{
 
-if(road.position.z > 100){
+if(obj.geometry &&
+obj.geometry.type==="BoxGeometry" &&
+obj !== car){
 
-road.position.z = 0;
+obj.position.z += speed;
+
+if(obj.position.z > 20){
+
+obj.position.z = -500;
 
 }
 
-document.getElementById("speed").innerText =
-Math.floor(speed * 12) + " KM/H";
+}
 
-speed *= 0.995;
+});
+
+document.getElementById("speed").innerText =
+Math.floor(speed*120)+" KM/H";
 
 renderer.render(scene,camera);
 
